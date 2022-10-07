@@ -29,7 +29,7 @@ class BertFuneTunePl(pl.LightningModule):
         super().__init__()
         self.lr = param.lr
         self.weight_decay = param.weight_decay
-        self.model = BertForSequenceClassification.from_pretrained("chinese-roberta-wwm-ext",
+        self.model = BertForSequenceClassification.from_pretrained("hfl/chinese-bert-wwm-ext",
                                                                    num_labels=param.output_size,
                                                                    )
 
@@ -44,7 +44,7 @@ class BertFuneTunePl(pl.LightningModule):
         pred: torch.Tensor = self.forward(batch_input_ids, batch_attention_mask)
         loss = F.cross_entropy(pred, y)
         pred_index = pred.argmax(dim=-1)
-        f1_score = torchmetrics.functional.f1(pred_index, y, average="micro")
+        f1_score = torchmetrics.functional.f1_score(pred_index, y, average="micro")
         accuracy = torchmetrics.functional.accuracy(pred_index, y, average="micro")
         recall = torchmetrics.functional.recall(pred_index, y, average="micro")
         self.log("val_loss", loss)
@@ -69,7 +69,7 @@ class BertFuneTunePl(pl.LightningModule):
         pred: torch.Tensor = self.forward(batch_input_ids, batch_attention_mask)
         loss = F.cross_entropy(pred, y)
         pred_index = pred.argmax(dim=-1)
-        f1_score = torchmetrics.functional.f1(pred_index, y, average="micro")
+        f1_score = torchmetrics.functional.f1_score(pred_index, y, average="micro")
         self.log("val_loss", loss)
         self.log("f1_score", f1_score)
         return {"true": y, "pred": pred_index, "loss": loss, "f1_score": f1_score}

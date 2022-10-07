@@ -32,7 +32,9 @@ def training(param):
         model = model.load_from_checkpoint(param.pre_ckpt_path, param)
     logger = TensorBoardLogger("log_dir", name="bert_pl")
 
-    trainer = pl.Trainer(logger=logger, gpus=1,
+    trainer = pl.Trainer(logger=logger,
+                         accelerator='gpu',
+                         gpus=0,
                          callbacks=[checkpoint_callback],
                          max_epochs=param.epoch,
                          # precision=16,
@@ -49,10 +51,9 @@ def training(param):
 
 
 def model_use(param):
-    tokenizer = BertTokenizer.from_pretrained("chinese-roberta-wwm-ext")
+    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
 
     def _load_dict(dir_name):
-
         with open(os.path.join(dir_name, 'index2tag.txt'), 'r', encoding='utf8') as reader:
             index2tag = json.load(reader)
 
@@ -60,9 +61,10 @@ def model_use(param):
 
     def _number_data(content):
         res = tokenizer.encode_plus(content,
-                              pad_to_max_length=True,
-                              max_length=param.max_length,)
-        return torch.tensor([res["input_ids"]], dtype=torch.long), torch.tensor([res["attention_mask"]], dtype=torch.long)
+                                    pad_to_max_length=True,
+                                    max_length=param.max_length, )
+        return torch.tensor([res["input_ids"]], dtype=torch.long), torch.tensor([res["attention_mask"]],
+                                                                                dtype=torch.long)
 
     index2tag = _load_dict(param.save_dir)
     param.output_size = len(index2tag)
@@ -76,17 +78,17 @@ if __name__ == '__main__':
     model_parser = BertFuneTunePl.add_argparse_args()
     parser = ArgumentParser(parents=[model_parser])
     parser.add_argument('-lr', type=float, default=1e-4, help='学习率')
-    parser.add_argument('-batch_size', type=int, default=6, help='批次数据大小')
-    parser.add_argument('-epoch', type=int, default=2)
+    parser.add_argument('-batch_size', type=int, default=32, help='批次数据大小')
+    parser.add_argument('-epoch', type=int, default=10)
     parser.add_argument('-save_dir', type=str, default="model_save/bert", help='模型存储位置')
     parser.add_argument('-load_pre', type=bool, default=False, help='是否加载已经训练好的ckpt')
     parser.add_argument('-test', type=bool, default=True, help='是否测试数据')
-    parser.add_argument('-train', type=bool, default=False, help='是否训练')
+    parser.add_argument('-train', type=bool, default=True, help='是否训练')
     parser.add_argument('-max_length', type=int, default=200, help='截取句子的最大长度')
     parser.add_argument('-pre_ckpt_path', type=str,
                         default="model_save/bert/bert-epoch=001-val_loss=0.10-f1_score=0.968.ckpt",
                         help='是否加载已经训练好的ckpt')
 
     args = parser.parse_args()
-    # training(args)
-    model_use(args)
+    training(args)
+    # model_use(args)

@@ -52,7 +52,7 @@ class TextDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.max_length = max_length
         self.token2index, self.tag2index, self.index2token, self.index2tag = {}, {}, {}, {}
-        self.tokenizer = BertTokenizer.from_pretrained("chinese-roberta-wwm-ext")
+        self.tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
         self.train_set, self.dev_set, self.test_set = None, None, None
         self.setup()
 
